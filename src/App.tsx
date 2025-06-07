@@ -21,33 +21,18 @@ function App() {
   const [address, setAddress] = useState('')
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
 
-  const handleAnalyze = () => {
+
+
+  const handleAnalyze = async  () => {
     setIsAnalyzing(true)
     // Simulate API call with dummy data
-    setTimeout(() => {
-      setAnalysisResult({
-        trustScore: 65,
-        starRating: 2,
-        suspiciousActivities: [
-          {
-            description: "Account dusting detected - multiple small SOL transfers",
-            threatLevel: "high",
-            timestamp: "2024-03-15 14:30:00"
-          },
-          {
-            description: "Suspicious token transfers to known scam addresses",
-            threatLevel: "high",
-            timestamp: "2024-03-14 09:15:00"
-          },
-          {
-            description: "New wallet with rapid token accumulation",
-            threatLevel: "low",
-            timestamp: "2024-03-11 16:30:00"
-          }
-        ]
-      })
-      setIsAnalyzing(false)
-    }, 3000)
+
+    const url = `https://solguard-server-2.vercel.app/check-transfers/?address=${address}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log(data);
+    setAnalysisResult(data);
+    setIsAnalyzing(false)
   }
 
   const handleBack = () => {

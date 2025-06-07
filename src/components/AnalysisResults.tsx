@@ -101,9 +101,14 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
           <span>Suspicious Activities</span>
         </h3>
         <div className='space-y-2'>
-          {result.suspiciousActivities.map((activity, index) => (
-            <div 
-              key={index}
+          {result.suspiciousActivities.length === 0 ? (
+            <div className='p-4 text-center text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200'>
+              No suspicious activities detected
+            </div>
+          ) : (
+            result.suspiciousActivities.map((activity, index) => (
+              <div 
+                key={index}
               className={`p-2 rounded-lg border ${getThreatLevelColor(activity.threatLevel)} flex items-start space-x-2 transition-all duration-200 hover:shadow-md`}
             >
               <div className='mt-0.5'>
@@ -121,7 +126,8 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                 <p className='text-sm font-medium mt-0.5 truncate'>{activity.description}</p>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
     </div>

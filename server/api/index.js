@@ -25,9 +25,10 @@ app.get('/', (req, res) => {
     res.send('Hello World');
 });
 
-app.post('/check-transfers', async (req, res) => {
+app.get('/check-transfers', async (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
     try {
-        const { address } = req.body;
+        const { address } = req.query;
 
         if (!address) {
             return res.status(400).json({ error: 'Solana address is required' });
