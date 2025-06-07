@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 app.post('/check-transfers', async (req, res) => {
     try {
         const { address } = req.body;
-        
+
         if (!address) {
             return res.status(400).json({ error: 'Solana address is required' });
         }
@@ -42,8 +42,8 @@ app.post('/check-transfers', async (req, res) => {
         }
 
         // Get the last 50 signatures
-        const signatures = await connection.getSignaturesForAddress(publicKey, { limit: 50 });
-        
+        const signatures = await connection.getSignaturesForAddress(publicKey, { limit: 25 });
+
         // Get transaction details for each signature with throttling
         const transfers = [];
         for (const sig of signatures) {
@@ -51,12 +51,12 @@ app.post('/check-transfers', async (req, res) => {
                 const tx = await connection.getTransaction(sig.signature, {
                     maxSupportedTransactionVersion: 0
                 });
-                
+
                 // Check if the address is the sender (first account in the transaction)
                 if (tx.transaction.message.accountKeys[0].toBase58() === address) {
                     // Calculate the amount sent (difference between pre and post balance)
                     const amount = tx.meta.preBalances[0] - tx.meta.postBalances[0];
-                    
+
                     // Only include if it's a positive amount (outgoing transfer) and less than MAX_TRANSFER_AMOUNT
                     if (amount > 0 && amount < MAX_TRANSFER_AMOUNT) {
                         transfers.push({
@@ -80,10 +80,36 @@ app.post('/check-transfers', async (req, res) => {
         // Sort by timestamp (most recent first)
         const outgoingTransfers = transfers.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+        if (outgoingTransfers.length === 0) {
+            return res.json({
+                trustScore: 100,
+                starRating: 4,
+                suspiciousActivities: []
+            })
+        } else if (outgoingTransfers.length < 3) {
+            return res.json({
+                trustScore: 50,
+                starRating: 3,
+                suspiciousActivities: [
+                    {
+                        description: `Some dusting attacks detected - ${outgoingTransfers.length}`,
+                        threatLevel: "medium",
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            })
+        }
+
         res.json({
-            address,
-            outgoingTransfers,
-            maxAmount: "0.000001 SOL"
+            trustScore: 0,
+            starRating: 0,
+            suspiciousActivities: [
+                {
+                    description: `High amount of dusting attacks detected - ${outgoingTransfers.length}`,
+                    threatLevel: "high",
+                    timestamp: new Date().toISOString()
+                }
+            ]
         });
 
     } catch (error) {
@@ -92,7 +118,9 @@ app.post('/check-transfers', async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+app.listen(3005, () => {
+    console.log('Server is running on port 3005');
 });
+
+module.exports = app;
 
